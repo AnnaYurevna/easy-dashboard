@@ -3,20 +3,27 @@
 const { Plugin, Notice, PluginSettingTab, Setting, normalizePath } = require("obsidian");
 
 const DEFAULT_SETTINGS = {
-  userName: "Anna",
-  homeNotePath: "🫆 System/Home.md",
-  folderViewNotePath: "🫆 System/_Folder View.md",
-  tagViewNotePath: "🫆 System/_Tag View.md",
-  inboxFolderPath: "📥 Inbox",
-  templatePath: "Sort/Templates/New Note.md",
-  mapNotePath: "🫆 System/_Sydney Map.md",
+  userName: "Friend",
+  homeNotePath: "System/Home.md",
+  folderViewNotePath: "System/_Folder View.md",
+  tagViewNotePath: "System/_Tag View.md",
+  inboxFolderPath: "Inbox",
+  templatePath: "",
+  mapNotePath: "",
   openOnStartup: true,
   openInReadingView: true,
+  hasSeenWelcomeNotice: false,
 };
 
 module.exports = class EasyDashboardPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
+
+    if (!this.settings.hasSeenWelcomeNotice) {
+      new Notice("Easy Dashboard: open plugin settings, review paths, then click Generate.", 10000);
+      this.settings.hasSeenWelcomeNotice = true;
+      await this.saveSettings();
+    }
 
     this.app.workspace.onLayoutReady(async () => {
       if (!this.settings.openOnStartup) return;
@@ -48,6 +55,14 @@ module.exports = class EasyDashboardPlugin extends Plugin {
     });
 
     this.addCommand({
+      id: "create-setup-guide",
+      name: "Create setup guide note",
+      callback: async () => {
+        await this.createSetupGuide();
+      },
+    });
+
+    this.addCommand({
       id: "connect-homepage-plugin",
       name: "Connect dashboard to Homepage plugin",
       callback: async () => {
@@ -71,6 +86,16 @@ module.exports = class EasyDashboardPlugin extends Plugin {
     await this.upsertFile(this.settings.homeNotePath, this.buildHomeNote());
     await this.upsertFile(this.settings.folderViewNotePath, this.buildFolderViewNote());
     await this.upsertFile(this.settings.tagViewNotePath, this.buildTagViewNote());
+  }
+
+  async createSetupGuide() {
+    const path = "Easy Dashboard Setup.md";
+    await this.upsertFile(path, this.buildSetupGuide());
+    const file = this.app.vault.getFileByPath(normalizePath(path));
+    if (file) {
+      await this.app.workspace.getMostRecentLeaf().openFile(file, { active: true });
+    }
+    new Notice("Easy Dashboard setup guide created");
   }
 
   async openDashboard() {
@@ -171,6 +196,34 @@ module.exports = class EasyDashboardPlugin extends Plugin {
 
   toLiteral(value) {
     return JSON.stringify(value || "");
+  }
+
+  buildSetupGuide() {
+    return [
+      "# Easy Dashboard Setup",
+      "",
+      "## Quick setup",
+      "",
+      "1. Install and enable `Dataview`.",
+      "2. Open `Settings -> Easy Dashboard`.",
+      "3. Review these paths:",
+      `   - Home note path: \`${this.settings.homeNotePath}\``,
+      `   - Folder view note path: \`${this.settings.folderViewNotePath}\``,
+      `   - Tag view note path: \`${this.settings.tagViewNotePath}\``,
+      `   - Inbox folder: \`${this.settings.inboxFolderPath}\``,
+      "4. Optionally set a template path for the `Add new` button.",
+      "5. Optionally set a map note path for the map button.",
+      "6. Leave `Open on startup` enabled if you want the dashboard to replace Homepage.",
+      "7. Click `Generate` in plugin settings.",
+      "",
+      "## Notes",
+      "",
+      "- `Dataview` is required.",
+      "- `Templater` is optional.",
+      "- `Homepage` is optional.",
+      "- You can regenerate the dashboard any time from plugin settings or commands.",
+      "",
+    ].join("\n");
   }
 
   buildHomeNote() {
@@ -473,6 +526,18 @@ class EasyDashboardSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     containerEl.createEl("h2", { text: "Easy Dashboard" });
+    containerEl.createEl("p", {
+      text: "Quick setup: enable Dataview, review your paths, then click Generate.",
+    });
+
+    new Setting(containerEl)
+      .setName("Open setup guide")
+      .setDesc("Create a note with setup instructions for this plugin.")
+      .addButton((button) =>
+        button.setButtonText("Create guide").onClick(async () => {
+          await this.plugin.createSetupGuide();
+        })
+      );
 
     new Setting(containerEl)
       .setName("User name")
