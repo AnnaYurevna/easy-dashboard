@@ -1,0 +1,15 @@
+{
+  "name": "easy-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shareable Obsidian plugin for generating a polished home dashboard.",
+  "main": "main.js",
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "dashboard",
+    "homepage",
+    "dataview"
+  ],
+  "license": "MIT"
+}
