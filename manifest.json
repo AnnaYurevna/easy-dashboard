@@ -3,7 +3,7 @@
   "name": "Easy Dashboard",
   "version": "1.0.1",
   "minAppVersion": "1.5.0",
-  "description": "Generate a polished Obsidian home dashboard with recent notes, folders, tags, and quick actions.",
+  "description": "Generate a polished home dashboard with recent notes, folders, tags, and quick actions.",
   "author": "Anna Yurevna",
   "isDesktopOnly": false
 }
