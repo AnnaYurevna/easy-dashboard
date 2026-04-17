@@ -1,6 +1,6 @@
 {
   "name": "easy-dashboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Shareable Obsidian plugin for generating a polished home dashboard.",
   "main": "main.js",
