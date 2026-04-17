@@ -61,15 +61,6 @@ It packages the workflow into something people can install without manually copy
 - The plugin generates markdown notes that contain `dataviewjs`, so users can still tweak the layout after installation.
 - The default paths in this repo reflect Anna's personal vault structure. Other users should review the settings after installation and change paths to match their own vault.
 
-## Release checklist
-
-1. Bump the version in `manifest.json`, `package.json`, and `versions.json`
-2. Create a release zip containing:
-   - `manifest.json`
-   - `main.js`
-   - `versions.json`
-3. Publish a GitHub release with a tag that matches the version in `manifest.json`
-
 ## License
 
 MIT
