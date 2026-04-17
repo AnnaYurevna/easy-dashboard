@@ -14,12 +14,14 @@ For manual installs, users can also download the repository zip and copy those f
 
 ## Recommended repo steps
 
-1. Create a GitHub repository named `easy-dashboard`
-2. Upload the files from this folder
-3. Create a tagged release such as `1.0.0`
+1. Push the latest plugin code to your GitHub repository
+2. Bump the version in `manifest.json`, `package.json`, and `versions.json`
+3. Create a tagged GitHub release such as `1.0.0`
 4. Attach a zip that contains the plugin files
-5. Share the GitHub link or BRAT install link
+5. Share the GitHub link or release link
 
 ## Community plugin note
 
-If you ever want to submit this to the official Obsidian community plugin directory, you will need a proper plugin repository with build tooling and their review requirements. For casual sharing, GitHub plus release assets is enough.
+If you want one-click install from Obsidian's community plugin browser, submit the plugin to `obsidianmd/obsidian-releases` by adding an entry to `community-plugins.json` and opening a pull request.
+
+Obsidian reads the plugin list from that repository, uses your repo metadata for the plugin page, and downloads actual plugin files from GitHub releases.

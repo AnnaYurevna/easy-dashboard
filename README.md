@@ -1,27 +1,30 @@
 # Easy Dashboard
 
-`Easy Dashboard` is a shareable Obsidian plugin that generates a polished home dashboard note with quick actions, recent notes, folders, and tags.
+`Easy Dashboard` is an Obsidian plugin that generates a polished home dashboard with quick actions, recent notes, folders, tags, and supporting views.
 
-It packages the workflow into something other people can install without manually copying long `dataviewjs` snippets.
+It packages the workflow into something people can install without manually copying long `dataviewjs` snippets.
 
 ## Features
 
 - Generates a home dashboard note
+- Opens the dashboard automatically on startup
 - Shows a time-based greeting
 - Adds a search shortcut
-- Adds quick action buttons
-- Shows recent notes
-- Shows folder pills
-- Shows tag pills
+- Adds quick action buttons for new notes, inbox, and map
+- Shows recent notes as cards
+- Shows folder shortcuts as cards
+- Hides system folders from the folder list
+- Shortens `Sort/...` folders to their final folder name in the UI
+- Shows tag shortcuts
 - Generates separate folder and tag browser pages
 - Adds commands for opening and regenerating the dashboard
-- Can connect to the `Homepage` community plugin
+- Can still connect to the `Homepage` community plugin if someone wants that setup
 
 ## Requirements
 
 - `Dataview` is required
 - `Templater` is optional
-- `Homepage` is optional
+- `Homepage` is optional and no longer required for startup behavior
 
 ## Installation
 
@@ -32,17 +35,20 @@ It packages the workflow into something other people can install without manuall
 3. Put the files into that folder
 4. Enable the plugin in Obsidian community plugins
 
-### BRAT or GitHub install
+### GitHub release install
 
-You can also publish this repo and install it through BRAT or by downloading a release zip.
+1. Download the latest release assets
+2. Extract the plugin files
+3. Put `manifest.json`, `main.js`, and `versions.json` into `.obsidian/plugins/easy-dashboard/`
+4. Enable the plugin in Obsidian
 
 ## Setup
 
 1. Enable `Dataview`
 2. Open `Settings -> Easy Dashboard`
-3. Set your preferred note paths and inbox folder
-4. Click `Generate`
-5. Optionally click `Connect` if you use the `Homepage` plugin
+3. Set your preferred note paths, inbox folder, template, and optional map note
+4. Make sure `Open on startup` is enabled if you want the dashboard to replace `Homepage`
+5. Click `Generate`
 
 ## Commands
 
@@ -52,7 +58,8 @@ You can also publish this repo and install it through BRAT or by downloading a r
 
 ## Notes
 
-The plugin generates markdown notes that contain `dataviewjs`, so users can still tweak the layout after installation.
+- The plugin generates markdown notes that contain `dataviewjs`, so users can still tweak the layout after installation.
+- The default paths in this repo reflect Anna's personal vault structure. Other users should review the settings after installation and change paths to match their own vault.
 
 ## Release checklist
 
@@ -61,7 +68,7 @@ The plugin generates markdown notes that contain `dataviewjs`, so users can stil
    - `manifest.json`
    - `main.js`
    - `versions.json`
-3. Publish a GitHub release
+3. Publish a GitHub release with a tag that matches the version in `manifest.json`
 
 ## License
 

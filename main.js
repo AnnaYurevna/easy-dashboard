@@ -4,18 +4,25 @@ const { Plugin, Notice, PluginSettingTab, Setting, normalizePath } = require("ob
 
 const DEFAULT_SETTINGS = {
   userName: "Anna",
-  homeNotePath: "System/Home.md",
-  folderViewNotePath: "System/_Folder View.md",
-  tagViewNotePath: "System/_Tag View.md",
-  inboxFolderPath: "Inbox",
-  templatePath: "",
-  mapNotePath: "",
+  homeNotePath: "🫆 System/Home.md",
+  folderViewNotePath: "🫆 System/_Folder View.md",
+  tagViewNotePath: "🫆 System/_Tag View.md",
+  inboxFolderPath: "📥 Inbox",
+  templatePath: "Sort/Templates/New Note.md",
+  mapNotePath: "🫆 System/_Sydney Map.md",
+  openOnStartup: true,
   openInReadingView: true,
 };
 
 module.exports = class EasyDashboardPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
+
+    this.app.workspace.onLayoutReady(async () => {
+      if (!this.settings.openOnStartup) return;
+      await this.ensureDashboardFiles();
+      await this.openDashboard();
+    });
 
     this.addRibbonIcon("house", "Open dashboard", async () => {
       await this.ensureDashboardFiles();
@@ -109,7 +116,7 @@ module.exports = class EasyDashboardPlugin extends Plugin {
 
     config.homepages = {
       "Main Homepage": {
-        value: this.basenameWithoutExtension(this.settings.homeNotePath),
+        value: this.settings.homeNotePath,
         kind: "File",
         openOnStartup: true,
         openMode: "Replace all open notes",
@@ -123,8 +130,8 @@ module.exports = class EasyDashboardPlugin extends Plugin {
         pin: false,
         commands: [],
         alwaysApply: false,
-        hideReleaseNotes: false
-      }
+        hideReleaseNotes: false,
+      },
     };
 
     await this.app.vault.adapter.write(configPath, JSON.stringify(config, null, 2));
@@ -169,12 +176,12 @@ module.exports = class EasyDashboardPlugin extends Plugin {
   buildHomeNote() {
     const config = {
       userName: this.settings.userName,
-      homeNoteName: this.basenameWithoutExtension(this.settings.homeNotePath),
-      folderViewNoteName: this.basenameWithoutExtension(this.settings.folderViewNotePath),
-      tagViewNoteName: this.basenameWithoutExtension(this.settings.tagViewNotePath),
+      homeNotePath: this.settings.homeNotePath,
+      folderViewNotePath: this.settings.folderViewNotePath,
+      tagViewNotePath: this.settings.tagViewNotePath,
       inboxFolderPath: this.settings.inboxFolderPath,
       templatePath: this.settings.templatePath,
-      mapNoteName: this.settings.mapNotePath ? this.basenameWithoutExtension(this.settings.mapNotePath) : ""
+      mapNotePath: this.settings.mapNotePath,
     };
 
     return [
@@ -219,6 +226,15 @@ module.exports = class EasyDashboardPlugin extends Plugin {
       "const actions = dv.el('div', '', { cls: 'home-actions' });",
       "actions.empty();",
       "const newBtn = actions.createEl('div', { cls: 'home-new-btn', text: '⊕  Add new' });",
+      "const inboxBtn = actions.createEl('div', {",
+      "  cls: 'home-new-btn',",
+      "  text: '📥  Inbox',",
+      "  attr: { style: 'background: var(--background-secondary); color: var(--text-normal); border: 1px solid var(--background-modifier-border);' },",
+      "});",
+      "inboxBtn.addEventListener('click', () => {",
+      "  window._annaDashboardFolder = HOME_CFG.inboxFolderPath;",
+      "  app.workspace.openLinkText(HOME_CFG.folderViewNotePath, '', false);",
+      "});",
       "newBtn.addEventListener('click', async () => {",
       "  const inboxFolder = app.vault.getAbstractFileByPath(HOME_CFG.inboxFolderPath);",
       "  const templateFile = HOME_CFG.templatePath ? app.vault.getAbstractFileByPath(HOME_CFG.templatePath) : null;",
@@ -234,19 +250,19 @@ module.exports = class EasyDashboardPlugin extends Plugin {
       "  console.warn('Easy Dashboard: inbox folder not found');",
       "});",
       "",
-      "if (HOME_CFG.mapNoteName) {",
+      "if (HOME_CFG.mapNotePath) {",
       "  const mapBtn = actions.createEl('div', {",
       "    cls: 'home-new-btn',",
       "    text: '🗺️  Open map',",
-      "    attr: { style: 'background: var(--background-secondary); color: var(--text-normal); border: 1px solid var(--background-modifier-border);' }",
+      "    attr: { style: 'background: var(--background-secondary); color: var(--text-normal); border: 1px solid var(--background-modifier-border);' },",
       "  });",
-      "  mapBtn.addEventListener('click', () => app.workspace.openLinkText(HOME_CFG.mapNoteName, '', false));",
+      "  mapBtn.addEventListener('click', () => app.workspace.openLinkText(HOME_CFG.mapNotePath, '', false));",
       "}",
       "",
       "dv.el('div', 'Recent notes', { cls: 'home-section' });",
       "const grid = dv.el('div', '', { cls: 'note-grid' });",
       "grid.empty();",
-      "const recents = dv.pages().where(p => p.file.name !== HOME_CFG.homeNoteName && !p.file.name.startsWith('_') && !p.file.path.endsWith('.base') && !p.file.path.startsWith('Templates/')).sort(p => p.file.mtime, 'desc').limit(6);",
+      "const recents = dv.pages().where(p => p.file.path !== HOME_CFG.homeNotePath && !p.file.name.startsWith('_') && !p.file.path.endsWith('.base') && !p.file.path.startsWith('Templates/')).sort(p => p.file.mtime, 'desc').limit(6);",
       "for (const p of recents) {",
       "  let preview = '';",
       "  try {",
@@ -264,15 +280,17 @@ module.exports = class EasyDashboardPlugin extends Plugin {
       "dv.el('div', 'Folders', { cls: 'home-section' });",
       "const folderRow = dv.el('div', '', { cls: 'folder-row' });",
       "folderRow.empty();",
-      "const allFolders = [...new Set(dv.pages().map(p => p.file.folder).filter(f => f && f !== '/'))].sort();",
+      "const hiddenFolders = new Set(['System', '🫆 System', 'Inbox', '📥 Inbox']);",
+      "const allFolders = [...new Set(dv.pages().map(p => p.file.folder).filter(f => f && f !== '/' && !hiddenFolders.has(f)))].sort();",
       "for (const folder of allFolders) {",
       "  const count = dv.pages(`\"${folder}\"`).length;",
+      "  const label = folder.startsWith('Sort/') ? folder.split('/').pop() : folder;",
       "  const pill = folderRow.createEl('div', { cls: 'folder-pill' });",
-      "  pill.createSpan({ text: `📂 ${folder}` });",
+      "  pill.createSpan({ text: `📂 ${label}` });",
       "  pill.createEl('span', { cls: 'fp-count', text: `${count}` });",
       "  pill.addEventListener('click', () => {",
       "    window._annaDashboardFolder = folder;",
-      "    app.workspace.openLinkText(HOME_CFG.folderViewNoteName, '', false);",
+      "    app.workspace.openLinkText(HOME_CFG.folderViewNotePath, '', false);",
       "  });",
       "}",
       "",
@@ -284,18 +302,17 @@ module.exports = class EasyDashboardPlugin extends Plugin {
       "  const pill = tagRow.createEl('div', { cls: 'tag-pill', text: tag });",
       "  pill.addEventListener('click', () => {",
       "    window._annaDashboardTag = tag;",
-      "    app.workspace.openLinkText(HOME_CFG.tagViewNoteName, '', false);",
+      "    app.workspace.openLinkText(HOME_CFG.tagViewNotePath, '', false);",
       "  });",
       "}",
-      "```"
+      "```",
     ].join("\n");
   }
 
   buildFolderViewNote() {
-    const homeNoteName = this.basenameWithoutExtension(this.settings.homeNotePath);
     return [
       "```dataviewjs",
-      `const HOME_NOTE = ${this.toLiteral(homeNoteName)};`,
+      `const HOME_NOTE = ${this.toLiteral(this.settings.homeNotePath)};`,
       "const styleId = 'anna-dashboard-folder';",
       "if (!document.getElementById(styleId)) {",
       "  const s = document.createElement('style');",
@@ -364,15 +381,14 @@ module.exports = class EasyDashboardPlugin extends Plugin {
       "    }",
       "  }",
       "}",
-      "```"
+      "```",
     ].join("\n");
   }
 
   buildTagViewNote() {
-    const homeNoteName = this.basenameWithoutExtension(this.settings.homeNotePath);
     return [
       "```dataviewjs",
-      `const HOME_NOTE = ${this.toLiteral(homeNoteName)};`,
+      `const HOME_NOTE = ${this.toLiteral(this.settings.homeNotePath)};`,
       "const styleId = 'anna-dashboard-tag';",
       "if (!document.getElementById(styleId)) {",
       "  const s = document.createElement('style');",
@@ -441,7 +457,7 @@ module.exports = class EasyDashboardPlugin extends Plugin {
       "    }",
       "  }",
       "}",
-      "```"
+      "```",
     ].join("\n");
   }
 };
@@ -524,6 +540,16 @@ class EasyDashboardSettingTab extends PluginSettingTab {
       .addText((text) =>
         text.setValue(this.plugin.settings.mapNotePath).onChange(async (value) => {
           this.plugin.settings.mapNotePath = value.trim();
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName("Open on startup")
+      .setDesc("Automatically open the dashboard when Obsidian starts.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.openOnStartup).onChange(async (value) => {
+          this.plugin.settings.openOnStartup = value;
           await this.plugin.saveSettings();
         })
       );
