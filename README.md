@@ -42,6 +42,18 @@ It packages the workflow into something people can install without manually copy
 3. Put `manifest.json`, `main.js`, and `versions.json` into `.obsidian/plugins/easy-dashboard/`
 4. Enable the plugin in Obsidian
 
+### GitHub Release install on MacOS with vault in iCloud
+
+```
+cd ~/Library/Mobile\ Documents/iCloud\~md\~obsidian/Documents/.obsidian/plugins
+curl -fsSL -o easy-dashboard.tar.gz \
+  "$(curl -fsSL https://api.github.com/repos/AnnaYurevna/easy-dashboard/releases/latest | jq -r .tarball_url)"
+tar xzf easy-dashboard.tar.gz
+rm easy-dashboard.tar.gz
+```
+
+Enable the plugin in Obsidian
+
 ## Setup
 
 1. Enable `Dataview`
